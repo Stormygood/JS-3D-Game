@@ -1,0 +1,25 @@
+#waaagh{
+    position: absolute;
+    width: 1200px;
+    height: 800px;
+    border: 2px solid #000;
+    perspective: 600px;
+}
+
+#ork{
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    /* background-color: aquamarine; */
+    transform-style: preserve-3d;
+}
+
+#warboss{
+    position: absolute;
+    width: 100px;
+    height: 200px;
+    top: 200px;
+    left: 600px;
+    background-color: rgb(14, 142, 61);
+    transform: translate(-30%, -50%) rotateY(60deg);
+}
