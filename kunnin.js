@@ -8,6 +8,10 @@ function player(x, y, z, rx, ry){
     this.ry = ry;
 }
 
+var nob = new player(0, 0, 0, 0, 0);
+
+var ork = document.getElementById("ork");
+
 
 //vars for mvmnt
 
@@ -17,12 +21,41 @@ var PressForward = 0;
 var PressBack = 0;
 var PressUp =0;
 var Rotate = 0;
+var speed = 1;
+//tp var to check if it has been teleported already or not
+let tp_var = 0;
+
 
 
 //if the key is pressed
 document.addEventListener("keydown", (event) => {
-    while(event.key == 'r'){
+    if(event.key == 'r'){
+    nob.x = 0;
+    nob.y = 0;
+    console.log("TPd center")
+    }
+
+    if(event.key == 't'){
+        if(tp_var == 1){
+        nob.x = ork.scrollWidth * (-0.5);
+        nob.y = ork.scrollHeight * (-0.5);  
+        tp_var = 0;  
+        console.log("TPd opposite");
+        console.log(nob.x);
+        console.log(nob.y);
+        } else {
+            nob.x = ork.clientWidth * 0.5;
+        nob.y = ork.clientHeight * 0.5;
+        tp_var = 1;
+        console.log("TPd new");
+        console.log(nob.x);
+        console.log(nob.y);
+        }
         
+    }
+
+    if(event.key == 'z'){
+        speed = 6;
     }
 
     if(event.key == 'w'){
@@ -68,25 +101,26 @@ document.addEventListener("keyup", (event) => {
     if(event.keyCode == 32){
         PressUp = 0;
     }
+
+    if(event.key == 'z'){
+        speed = 1;
+    }
 })
 
-var nob = new player(0, 0, 0, 0, 0);
 
-var ork = document.getElementById("ork");
 
 function update(){
     // 1st count mvmnt
     dx = PressRight - PressLeft;
     dz = PressForward - PressBack;
     dy = -PressUp;
-    console.log(PressRight);
+    // console.log(PressRight);
 
     //add mvmnt to the coordinates
-
-    nob.x = nob.x + dx;
-    nob.y = nob.y + dy;
-    nob.z = nob.z + dz;
-    console.log(PressUp);
+    //speed is multiplied to the differnece of the coordinates, so the change of the coordinates is sped up
+    nob.x = nob.x + dx * speed;
+    nob.y = nob.y + dy * speed;
+    nob.z = nob.z + dz * speed;
     //chng coords of Ork
 
     ork.style.transform = "translate3d(" + (-nob.x) + "px, " + (-nob.y) + "px," + (-nob.z) + "px)";
