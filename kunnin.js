@@ -30,6 +30,18 @@ var speed = 1;
 let tp_var = 0;
 var mouseX = 0;
 var mouseY = 0;
+var lock = false;
+
+var container = document.getElementById("waaagh");
+//chnages the lock state
+container.onclick = function (){
+    container.requestPointerLock();
+}
+
+//on event request changes the state of the lock variable
+document.addEventListener("pointerlockchange", (event) => {
+    lock = !lock;
+})
 
 
 //if the key is pressed
@@ -114,7 +126,7 @@ document.addEventListener("keyup", (event) => {
         speed = 1;
     }
 })
-
+//assigns mouse movement to mouse variables
 document.addEventListener("mousemove", (event) => {
     mouseX = event.movementX;
     mouseY = event.movementY;
@@ -124,8 +136,9 @@ document.addEventListener("mousemove", (event) => {
 
 function update(){
     // 1st count mvmnt
+    //movement is changed based on what angle the mouse has been left
     dx = (PressRight - PressLeft) * Math.cos(nob.ry * deg) - (PressForward - PressBack) * Math.sin(nob.ry * deg);
-    dz = -((PressForward - PressBack) * Math.sin(nob.ry * deg) - (PressRight - PressLeft) * Math.cos(nob.ry * deg));
+    dz = -((PressRight - PressLeft) * Math.sin(nob.ry * deg) - (PressForward - PressBack) * Math.cos(nob.ry * deg));
     dy = -PressUp;
 
     drx = mouseY;
@@ -140,11 +153,14 @@ function update(){
     nob.y = nob.y + dy * speed;
     nob.z = nob.z + dz * speed;
 
+    if(lock == true){
+        nob.rx = nob.rx +  drx;
+    nob.ry = nob.ry + dry;
+    }
 
     //add lookng around
 
-    nob.rx = nob.rx +  drx;
-    nob.ry = nob.ry + dry;
+    
 
     ork.style.transform = "translateZ(100px)" + "rotateX(" + (-nob.rx) +"deg)"+
     "rotateY(" + (-nob.ry) + "deg)"+
