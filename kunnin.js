@@ -133,11 +133,15 @@ document.addEventListener("mousemove", (event) => {
 })
 
 
-
 function update(){
     // 1st count mvmnt
     //movement is changed based on what angle the mouse has been left
     dx = (PressRight - PressLeft) * Math.cos(nob.ry * deg) - (PressForward - PressBack) * Math.sin(nob.ry * deg);
+    if(nob.rx > 45){
+        nob.rx = 45;
+    } else if(nob.rx < -10){
+        nob.rx = -10;
+    }
     dz = -((PressRight - PressLeft) * Math.sin(nob.ry * deg) - (PressForward - PressBack) * Math.cos(nob.ry * deg));
     dy = -PressUp;
 
