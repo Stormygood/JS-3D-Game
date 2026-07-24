@@ -12,10 +12,9 @@ function player(x, y, z, rx, ry){
     this.ry = ry;
 }
 
-var nob = new player(0, 0, 0, 0, 0);
+var camera = new player(0, 0, 0, 0, 0);
 
-var ork = document.getElementById("ork");
-
+var world = document.getElementById("world");
 
 //vars for mvmnt
 
@@ -24,6 +23,7 @@ var PressRight = 0;
 var PressForward = 0;
 var PressBack = 0;
 var PressUp =0;
+var pressDown = 0;
 var Rotate = 0;
 var speed = 1;
 //tp var to check if it has been teleported already or not
@@ -31,11 +31,44 @@ let tp_var = 0;
 var mouseX = 0;
 var mouseY = 0;
 var lock = false;
+var can_lock = false;
 
-var container = document.getElementById("waaagh");
+//values in map
+//  X Y Z RX RY RZ WIDTH HEIGHT COLOUR
+
+//for the wall variable(basically a matric)
+//               0   1   2   3     4    5     6        7        8        9
+//#0 -> Wall 1  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#1 -> Wall 2  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#2 -> Wall 3  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#3 -> Wall 4  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#4 -> Ground  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+
+var map = [
+    [0, -125, -1000, 0, 0, 0, 2000, 500, "images/jungle.webp", 1], //front wall
+    [0, -125, 1000, 0, 0, 0, 2000, 500, "images/jungle.webp",  1], //back wall
+    [1000, -125, 0, 0, 90, 0, 2000, 500, "images/jungle.webp", 1], //right wall
+    [-1000, -125, 0, 0, 90, 0, 2000, 500, "images/jungle.webp", 1],
+    [0, 125, 0, 90, 0, 0, 2000, 2000, "images/floor.jpg", 1] //ground
+
+]
+
+var keys = [
+    [1500, 80, 300, 0, 0, 0, 75, 75, "images/teef.png", 1],
+    [200, 80, 800, 0, 0, 0, 75, 75, "images/teef.png", 1],
+    [700, 80, 650, 0, 0, 0, 75, 75, "images/teef.png", 1]
+];
+
+var coins = [
+    [1250, 0, 450, 0, 0, 0, 75, 75, "images/shoota.webp", 1],
+    [200, 0,1250, 0, 0, 0, 75, 75, "images/shoota.webp", 1],
+    [700, 0, 1800, 0, 0, 0, 75, 75, "images/shoota.webp", 1]
+];
+
+var container = document.getElementById("frame");
 //chnages the lock state
 container.onclick = function (){
-    container.requestPointerLock();
+    if(can_lock) container.requestPointerLock();
 }
 
 //on event request changes the state of the lock variable
@@ -47,31 +80,35 @@ document.addEventListener("pointerlockchange", (event) => {
 //if the key is pressed
 document.addEventListener("keydown", (event) => {
     if(event.key == 'r'){
-    nob.x = 0;
-    nob.y = 0;
-    nob.z = 0;
-    nob.rx = 0;
-    nob.ry = 0;
+    camera.x = 0;
+    camera.y = 0;
+    camera.z = 0;
+    camera.rx = 0;
+    camera.ry = 0;
     console.log("TPd center")
     }
 
     if(event.key == 't'){
         if(tp_var == 1){
-        nob.x = -400;
-        nob.y = -300;  
+        camera.x = -400;
+        camera.y = -300;  
         tp_var = 0;  
         console.log("TPd opposite");
-        console.log(nob.x);
-        console.log(nob.y);
+        console.log(camera.x);
+        console.log(camera.y);
         } else {
-            nob.x = 400;
-        nob.y = 300;
+            camera.x = 400;
+        camera.y = 300;
         tp_var = 1;
         console.log("TPd new");
-        console.log(nob.x);
-        console.log(nob.y);
+        console.log(camera.x);
+        console.log(camera.y);
         }
         
+    }
+
+    if(event.keyCode == '16'){
+        pressDown = 1;
     }
 
     if(event.key == 'z'){
@@ -102,6 +139,11 @@ document.addEventListener("keydown", (event) => {
 
 //if key is released
 document.addEventListener("keyup", (event) => {
+
+    if(event.keyCode == '16'){
+        pressDown = 0;
+    }
+
     if(event.key == 'w'){
         PressForward = 0;
     }
@@ -110,11 +152,11 @@ document.addEventListener("keyup", (event) => {
         PressBack = 0;
     }
 
-    if(event.key = 'a'){
+    if(event.key == 'a'){
         PressLeft = 0;
     }
 
-    if(event.key = 'd'){
+    if(event.key == 'd'){
         PressRight = 0;
     }
 
@@ -136,44 +178,170 @@ document.addEventListener("mousemove", (event) => {
 function update(){
     // 1st count mvmnt
     //movement is changed based on what angle the mouse has been left
-    dx = (PressRight - PressLeft) * Math.cos(nob.ry * deg) - (PressForward - PressBack) * Math.sin(nob.ry * deg);
-    if(nob.rx > 45){
-        nob.rx = 45;
-    } else if(nob.rx < -10){
-        nob.rx = -10;
+    //  TODO: left and right mvmnt keys get flipped wehn turning 90 degrees on the X axis
+    dx = (PressRight - PressLeft) * Math.cos(camera.ry * deg) - (PressForward - PressBack) * Math.sin(camera.ry * deg);
+    if(camera.rx > 6){
+        camera.rx = 6;
+    } else if(camera.rx < -85){
+        camera.rx = -85;
     }
-    dz = -((PressRight - PressLeft) * Math.sin(nob.ry * deg) - (PressForward - PressBack) * Math.cos(nob.ry * deg));
-    dy = -PressUp;
+    dz = ((PressLeft - PressRight) * Math.sin(camera.ry * deg) - (PressForward - PressBack) * Math.cos(camera.ry * deg));
+    if(pressDown == 1){
+        dy = pressDown
+    } else if( PressUp == 1){
+        dy = -PressUp;
+    } else {
+        dy = 0;
+    }
+    // dy = -PressUp;
 
     drx = mouseY;
     dry = mouseX;
     mouseX = mouseY = 0;
-    console.log(nob.x, nob.y, nob.z, nob.rx, nob.ry);
+    console.log(camera.x, camera.y, camera.z, camera.rx, camera.ry);
 
     //add mvmnt to the coordinates
     //speed is multiplied to the differnece of the coordinates, so the change of the coordinates is sped up
     //chng coords of Ork
-    nob.x = nob.x + dx * speed;
-    nob.y = nob.y + dy * speed;
-    nob.z = nob.z + dz * speed;
+    camera.x = camera.x + dx * speed;
+    camera.y = camera.y + dy * speed;
+    camera.z = camera.z + dz * speed;
 
     if(lock == true){
-        nob.rx = nob.rx +  drx;
-    nob.ry = nob.ry + dry;
+        camera.rx = camera.rx +  drx;
+    camera.ry = camera.ry + dry;
     }
 
     //add lookng around
 
     
 
-    ork.style.transform = "translateZ(100px)" + "rotateX(" + (-nob.rx) +"deg)"+
-    "rotateY(" + (-nob.ry) + "deg)"+
-    "translate3d(" + (-nob.x) + "px, " + (-nob.y) + "px," + (-nob.z) + "px)";
+    world.style.transform = "translateZ(600px)" + "rotateX(" + (camera.rx) +"deg)"+
+    "rotateY(" + (-camera.ry) + "deg)"+
+    "translate3d(" + (-camera.x) + "px, " + (-camera.y) + "px," + (-camera.z) + "px)";
 
 
 }
 
-TimerGame = setInterval(update, 10);
+
+function createObjects(originObj, type){
+	for (i = 0; i < originObj.length; i++){
+		
+		//create rectangles and styles
+		let newElement = document.createElement("div");
+		newElement.className = "obj";
+		newElement.id = type + i;
+		console.log(type + i);
+		newElement.style.width = originObj[i][6] + "px";
+		newElement.style.height = originObj[i][7] + "px";
+		newElement.style.backgroundColor = originObj[i][8];
+		newElement.style.backgroundImage = "url(" + originObj[i][8] + ")";
+		newElement.style.opacity = originObj[i][9];
+		newElement.style.transform = "translate3d(" + (600 - originObj[i][6]/2 + originObj[i][0]) + "px," + 
+		(400 - originObj[i][7]/2 + originObj[i][1]) + "px," + 
+		originObj[i][2] + "px)" + 
+		"rotateX(" + originObj[i][3] + "deg)" + 
+		"rotateY(" + originObj[i][4] + "deg)" + 
+		"rotateZ(" + originObj[i][5] + "deg)";
+		
+		//insert rectangles into the world
+		world.append(newElement);
+	}
+}
+
+function CreateNewWorld(){
+	createObjects(map,"wall");
+    createObjects(keys, "key");
+    createObjects(coins, "coin");
+}
+
+CreateNewWorld();
+
+
+function interact(originObj,type){
+	for (i = 0; i < originObj.length; i++){
+		let dis = (originObj[i][0] - camera.x)**2 +
+					(originObj[i][1] - camera.y)**2 +
+					(originObj[i][2] - camera.z)**2;
+		let is = (originObj[i][6])**2;
+		if (dis < is){
+			document.getElementById(type + i).style.display = "none";
+			originObj[i][0] = 100000;
+		}
+	}
+}
+
+function rotate(originObj, type, rotAng){
+    for(let i = 0; i < originObj.length; i++){
+        originObj[i][4] = originObj[i][4] + rotAng;
+        document.getElementById(type + i).style.transform = "translate3d(" + (600 - originObj[i][6] * 0.5 + originObj[i][0]) + "px," +
+        (400 - originObj[i][2]) + "px)" + 
+        "rotateX(" + originObj[i][3] + "deg)"  + 
+        "rotateY" + originObj[i][4] + "deg)" +
+        "rotateZ" + originObj[i][5] + "deg)";
+    }
+}
+
+function repeatForever(){
+	update();
+	interact(coins,"coin");
+	interact(keys,"key");
+    rotate(keys, "key", 0.5);
+    rotate(coins, "coin", 0.5);
+}
+
+
+
+
+//for the wall variable(basically a matric)
+//               0   1   2   3     4    5     6        7        8        9
+//#0 -> Wall 1  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#1 -> Wall 2  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#2 -> Wall 3  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#3 -> Wall 4  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#4 -> Ground  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+
+
+
+// function CreateNewWorld(){
+
+//     createBoyz(map, 'wall');
+//     for(let i = 0; i < map.length; i++){
+//         let nwElement = document.createElement("div");
+//         nwElement.className = "obj";
+//         nwElement.id = "obj" + i;
+//         nwElement.style.width = map[i][6] + "px";
+//         nwElement.style.height = map[i][7] + "px";
+//         nwElement.style.backgroundImage = "url(" + map[i][8] + ")";
+//         nwElement.style.opacity = map[i][9]
+//         nwElement.style.transform = "translate3d(" + ((600 - map[i][7]) * 0.5 + map[i][0]) +"px, " + ((400 - map[i][7]) * 0.5 + map[i][1]) +"px, " + map[i][2] +"px)" +
+//         "rotateX(" + map[i][3] +"deg)" +
+//         "rotateY(" + map[i][4] +"deg)" +
+//         "rotateZ(" + map[i][5] +"deg)"
+//         console.log('THIS ->>> MEKBOY', i);
+
+//         //append nwElement into the world
+
+//     world.appendChild(nwElement);
+//     console.log(`Appendede ${nwElement.id}`);
+    
+        
+//     }
+// }
+// CreateNewWorld();
+
+//               0   1   2   3     4    5     6        7        8        9
+//#0 -> Wall 1  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#1 -> Wall 2  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#2 -> Wall 3  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#3 -> Wall 4  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+//#4 -> Ground  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]*
+//#4 -> Ground  [X] [Y] [Z] [RX] [RY] [RZ] [HEIGHT] [WIDTH] [COLOUR] [OPACITY]
+
+
+
+// TimerGame = setInterval(update, 10);
+TimerGame = setInterval(repeatForever, 10);
 
 
 //khgvghfkhgtyf

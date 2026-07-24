@@ -1,0 +1,36 @@
+16/7/26
+
+Chnaged the following IDs:
+
+waaagh -> frame
+ork -> world
+warboss -> ex_item
+
+==========================
+
+Chnaged the following CSS:
+
+Removed the ID boy
+Removed the class mekboy
+chnaged the previous IDs to the new ones
+updated the class ".painboy" to ".obj"
+
+BUGS:
+when turning 90 degrees on the X axis, the left and right movement buttons flip
+
+===========================
+
+17/07/26
+
+Replaced the nob variable with "camera"
+
+===========================
+
+24/7/26
+
+Menu screens:
+Added menu backgrounds and rotation timer between the images
+Added images to the buttons and hover animations
+Added a new 'Controls' menu
+Added functionality to the new Menu
+

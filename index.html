@@ -5,23 +5,59 @@
         <link rel="stylesheet" href="style.css">
         <meta charset="meta-8">
 </head>
-    //waaagh div is "Frames"
-    //ork div is "Background", aka White
-    //Warboss div is "Character"
-    //boy div is "Ground"
 <body>
     
-    <div id="waaagh">
+    <div id="frame">
         
-        <div id="ork">
+        <div id="world">
             
-        <div id = "warboss"></div>
-            
-        <div id = "boy"></div>
+        
+        </div>
+        <div id="menu1" class="menu" style="display:block">
+            <div id="button1" class="button" style="display:block">
+                <p class="button-text">Start Game</p>
+            </div>
+
+            <div id="button2" class="button" style="display:block">
+                <p class="button-text">Instructions</p>
+            </div>
+
+            <div id="button4" class="button" style="display: block;">
+                <p class="button-text"> Controls</p>
+            </div>
+        </div>
+        <div id="menu2" class="menu" style="display: none;">
+            <p id="instructions">
+                <strong><br>
+                USE ENGLISH KEYBOARD!!!<br>
+                W - Go Forward<br>
+                A - Go Left<br>
+                S - Go Backwards<br>
+                D - Go Right<br>
+                SPACE - Jump<br>
+            </strong></p>
+
+            <div id="button3" class="button ork-sign::before ork-sign" style="display:block">
+                <p class="button-text">Back</p>
+            </div>
+        </div>
+        <div id="menu3" class="menu" style="display: none;">
+            <strong>
+                <p>
+                    Collect the 5 Astrophage containers
+                    Collect the 3 Taumeba containers
+                    Find and collect Rocky (He'll be your guide)
+                </p>
+            </strong>
+
+            <div id="button5" class="button">
+                Back
+            </div>
         </div>
     </div>
 </body>
 </html>
 <script src="kunnin.js"></script>
+<script src="menu.js"></script>
 
 
